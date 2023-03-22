@@ -1,0 +1,27 @@
+Count,Message,Traceback,Nodes
+1,'data',"  File ""/usr/local/lib/python3.9/site-packages/locust/user/task.py"", line 319, in run
+    self.execute_next_task()
+  File ""/usr/local/lib/python3.9/site-packages/locust/user/task.py"", line 344, in execute_next_task
+    self.execute_task(self._task_queue.pop(0))
+  File ""/usr/local/lib/python3.9/site-packages/locust/user/task.py"", line 457, in execute_task
+    task(self.user)
+  File ""/Users/maruf_maruf1/Library/CloudStorage/OneDrive-BaylorUniversity/RA/pptam/pptam-tool/toolchain/executed/train-ticket/locustfile.py"", line 193, in perform_task
+    requests.perform_task(""book"")
+  File ""/Users/maruf_maruf1/Library/CloudStorage/OneDrive-BaylorUniversity/RA/pptam/pptam-tool/toolchain/executed/train-ticket/locustfile.py"", line 154, in perform_task
+    task()
+  File ""/Users/maruf_maruf1/Library/CloudStorage/OneDrive-BaylorUniversity/RA/pptam/pptam-tool/toolchain/executed/train-ticket/locustfile.py"", line 112, in book
+    response_as_json_contacts = response_contacts.json()[""data""]
+",local
+2,list index out of range,"  File ""/usr/local/lib/python3.9/site-packages/locust/user/task.py"", line 319, in run
+    self.execute_next_task()
+  File ""/usr/local/lib/python3.9/site-packages/locust/user/task.py"", line 344, in execute_next_task
+    self.execute_task(self._task_queue.pop(0))
+  File ""/usr/local/lib/python3.9/site-packages/locust/user/task.py"", line 457, in execute_task
+    task(self.user)
+  File ""/Users/maruf_maruf1/Library/CloudStorage/OneDrive-BaylorUniversity/RA/pptam/pptam-tool/toolchain/executed/train-ticket/locustfile.py"", line 193, in perform_task
+    requests.perform_task(""book"")
+  File ""/Users/maruf_maruf1/Library/CloudStorage/OneDrive-BaylorUniversity/RA/pptam/pptam-tool/toolchain/executed/train-ticket/locustfile.py"", line 154, in perform_task
+    task()
+  File ""/Users/maruf_maruf1/Library/CloudStorage/OneDrive-BaylorUniversity/RA/pptam/pptam-tool/toolchain/executed/train-ticket/locustfile.py"", line 130, in book
+    self.order_id = response_as_json[0][""id""]
+",local

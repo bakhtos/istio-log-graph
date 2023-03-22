@@ -1,0 +1,2 @@
+Method,Name,Error,Occurrences
+PUT,pick_up_ticket,500 Server Error: Internal Server Error for url: pick_up_ticket,1

@@ -1,0 +1,3 @@
+Method,Name,Error,Occurrences
+POST,set_new_contact,500 Server Error: Internal Server Error for url: set_new_contact,2
+GET,book,500 Server Error: Internal Server Error for url: book,2
