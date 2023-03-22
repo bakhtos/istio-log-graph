@@ -1,9 +1,11 @@
-import networkx as nx
-
 import os
 import json
-from collections import Counter
 from datetime import datetime, timedelta
+
+ROOT_DIR = "kubernetes-istio-sleuth-v0.2.1-separate-load"
+PPTAM_DIR = os.path.join(ROOT_DIR, 'pptam')
+TRACING_DIR = os.path.join(ROOT_DIR, 'tracing-log')
+TIME_DELTA = timedelta(hours=-8)
 
 
 def detect_users(directory, time_delta=None):
@@ -68,8 +70,8 @@ def detect_users(directory, time_delta=None):
     return user_boundaries, instance_boundaries
 
 
-def parse_logs(directory, user_boundaries, instance_boundaries):
-    """Parse tracing logs to get call counts and pipelines.
+def create_edgelists(directory, user_boundaries, instance_boundaries):
+    """Parse tracing logs to get call counts and edgelists.
 
     Parameters
     __________
@@ -82,17 +84,13 @@ def parse_logs(directory, user_boundaries, instance_boundaries):
 
     Returns
     _______
-    pipelines : dict[str] -> list[tuple[datetime, str, str, str]],
+    edgelists : dict[str] -> list[tuple[datetime, str, str, str]],
         For each user[_instance]  list of tuples containing the datetime of
         the call, calling service, called service and called endpoint,
         sorted by the time of call.
-    call_counters : dict[str] -> Counter[tuple[str, str, str]],
-        For each user[_instance] a Counter which counts the amount of times
-        one service calls another service's endpoint.
     """
 
-    pipelines = dict()
-    call_counters = dict()
+    edgelists = dict()
     services = os.listdir(directory)
     for from_service in services:
         # Read log line by line
@@ -123,10 +121,8 @@ def parse_logs(directory, user_boundaries, instance_boundaries):
                 user_instance = user + '_' + user_instance
                 user = user + '_total'
                 # Insert user[_instance] in all necessary datastructures
-                call_counters.setdefault(user, Counter())
-                call_counters.setdefault(user_instance, Counter())
-                pipelines.setdefault(user, [])
-                pipelines.setdefault(user_instance, [])
+                edgelists.setdefault(user, [])
+                edgelists.setdefault(user_instance, [])
 
                 # If calling another service, store the call and the pipeline
                 to_service = obj["upstream_cluster"]
@@ -138,38 +134,33 @@ def parse_logs(directory, user_boundaries, instance_boundaries):
                     endpoint = endpoint.split('/')
                     endpoint = '/'.join(endpoint[0:5])
 
-                    call_counters[user][(from_service, to_service,
-                                         endpoint)] += 1
-                    call_counters[user_instance][(from_service,
-                                                  to_service, endpoint)] += 1
-                    pipelines[user].append((start_time.isoformat(),
-                                            from_service, to_service, endpoint))
-                    pipelines[user_instance].append((start_time.isoformat(),
-                                                     from_service, to_service,
-                                                     endpoint))
+                    edgelists[user].append((from_service, to_service,
+                                            endpoint, start_time.isoformat()))
+                    edgelists[user_instance].append((from_service, to_service,
+                                                     endpoint, start_time.isoformat()))
         f.close()
 
-    for l in pipelines.values():
-        l.sort(key=lambda x: x[0])
+    for pipeline in edgelists.values():
+        pipeline.sort(key=lambda x: x[0])
 
-    return pipelines, call_counters
+    return edgelists
 
 
-def write_pipelines(pipelines):
+def write_edgelists(edgelists):
     """Write each user[_instance]'s pipeline to a csv file."""
 
-    for k, l in pipelines.items():
-        p = os.path.join("pipelines", k+"_pipeline.csv")
-        os.makedirs("pipelines", exist_ok=True)
+    os.makedirs("edgelists", exist_ok=True)
+
+    for k, l in edgelists.items():
+        p = os.path.join("edgelists", k+".edgelist")
         file = open(p, 'w')
-        file.write("ISO_TIME,FROM_SERVICE,TO_SERVICE,ENDPOINT\n")
         for t in l:
-            file.write(",".join(t)+"\n")
+            file.write(' '.join(t)+'\n')
         file.close()
 
 
-def generate_call_graphs(pptam_dir, tracing_dir, time_delta):
-    """Create call graphs and pipelines based on logs location.
+def extract_graphs(pptam_dir, tracing_dir, time_delta):
+    """Create call graphs and edgelists based on logs location.
 
     Parameters
     __________
@@ -182,29 +173,14 @@ def generate_call_graphs(pptam_dir, tracing_dir, time_delta):
     time_delta - datetime.timedelta,
         Corrective timedelta to add to all timestamps in locust log (will be
         passed to detect_users()).
-
-    Returns
-    _______
-    user_graphs : dict[str] -> networkx.MultiDiGraph,
-        For each user[_instance], a multigraph where nodes are services and
-        edges are calls between services keyed by the endpoint.
-    pipelines : dict[str] -> list[tuple[datetime, str, str, str]],
-        For each user[_instance], list of tuples containing the datetime of
-        the call, calling service, called service and called endpoint,
-        sorted by the time of call.
     """
     user_boundaries, instance_boundaries = detect_users(pptam_dir, time_delta)
 
-    # Get calls and pipelines for each user using logs of each service
-    pipelines, call_counters = parse_logs(tracing_dir, user_boundaries,
-                                          instance_boundaries)
+    # Get calls and edgelists for each user using logs of each service
+    edgelists = create_edgelists(tracing_dir, user_boundaries,
+                                 instance_boundaries)
+    write_edgelists(edgelists)
 
-    # Create networkx' multigraph, edges are identified by User
-    user_graphs = dict()
-    for user, counter in call_counters.items():
-        G = nx.MultiDiGraph()
-        user_graphs[user] = G
-        for keys, weight in counter.items():
-            G.add_edge(keys[0], keys[1], key=keys[2], weight=weight)
 
-    return user_graphs, pipelines
+if __name__ == '__main__':
+    extract_graphs(PPTAM_DIR, TRACING_DIR, TIME_DELTA)
