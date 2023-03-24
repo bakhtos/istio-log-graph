@@ -141,7 +141,7 @@ def create_edgelists(directory, user_boundaries, instance_boundaries):
         f.close()
 
     for pipeline in edgelists.values():
-        pipeline.sort(key=lambda x: x[0])
+        pipeline.sort(key=lambda x: x[3])
 
     return edgelists
 

@@ -1,4 +1,4 @@
-ts-admin-user-service ts-user-service /api/v1/userservice/users 2022-06-13T05:25:15.924000
 ts-ui-dashboard ts-auth-service /api/v1/users/login 2022-06-13T05:25:15.757000
 ts-ui-dashboard ts-admin-user-service /api/v1/adminuserservice/users 2022-06-13T05:25:15.919000
+ts-admin-user-service ts-user-service /api/v1/userservice/users 2022-06-13T05:25:15.924000
 ts-user-service ts-auth-service /api/v1/auth 2022-06-13T05:25:15.929000
